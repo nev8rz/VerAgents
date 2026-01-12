@@ -46,10 +46,10 @@ from veragents.tools import registry
 schemas = registry.export_openai_tools()
 ```
 
-## Butlin 工具集（示例）
+## builtin 工具集（示例）
 开放天气（基于 open-meteo，无需密钥）：
 ```python
-import veragents.tools.butlin.weather  # 触发注册
+import veragents.tools.builtin.weather  # 触发注册
 from veragents.tools import registry
 
 res = registry.dispatch("get_current_weather", {"city": "Beijing"})
@@ -59,5 +59,5 @@ print(res)
 ## 目录
 - `veragents/core`：LLM 客户端、Agent、配置
 - `veragents/tools`：工具基类、注册表、装饰器
-- `veragents/tools/butlin`：示例工具（天气）
+- `veragents/tools/builtin`：示例工具（天气）
 - `examples/`：LLM 与工具使用示例

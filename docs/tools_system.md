@@ -12,22 +12,16 @@ VerAgents Tools System 是一个轻量级、工程化的工具管理框架，专
 
 ## 快速开始
 
-### 1. 定义简单工具 (Function Tool)
+### 1. 定义简单工具（函数签名自动建模）
 
-最简单的方式是直接在函数上使用 `@tool` 装饰器。
+推荐直接使用类型注解，`@tool` 会自动从函数签名生成 Pydantic 参数模型，无需手写 `BaseModel`。
 
 ```python
 from veragents.tools import tool, registry
 
 @tool
 def calculate_sum(a: int, b: int) -> int:
-    """
-    计算两个数的和。
-    
-    Args:
-        a: 第一个整数
-        b: 第二个整数
-    """
+    """计算两个数的和"""
     return a + b
 
 # 调用
@@ -35,23 +29,20 @@ result = registry.dispatch("calculate_sum", {"a": 10, "b": 20})
 print(result) # 30
 ```
 
-### 2. 定义复杂参数工具
+### 2. 多参数与可选/默认值
 
-对于复杂结构，可以使用 Pydantic 模型作为参数注解。
+直接在签名中声明默认值与可选类型，系统自动校验与转换。
 
 ```python
-from typing import List
-from pydantic import BaseModel
-from veragents.tools import tool
-
-class SearchParams(BaseModel):
-    query: str
-    tags: List[str] = []
+from typing import List, Optional
+from veragents.tools import tool, registry
 
 @tool
-def search(params: SearchParams):
+def search(query: str, tags: Optional[List[str]] = None, limit: int = 5) -> list[str]:
     """搜索数据库"""
-    return f"Searching {params.query} with tags {params.tags}"
+    return [f"{query}-{i}" for i in range(limit)]
+
+print(registry.dispatch("search", {"query": "LLM", "tags": ["ai"]}, strict=True))
 ```
 
 ### 3. 定义类工具 (Class Tool)
@@ -155,3 +146,6 @@ print(json.dumps(tools_schema, indent=2))
 #     tools=tools_schema
 # )
 ```
+
+## 内置示例工具
+- 天气（open-meteo，无需密钥）：`veragents.tools.builtin.weather`（工具名：`get_current_weather`）
