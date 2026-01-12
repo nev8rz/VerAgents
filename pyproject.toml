@@ -1,0 +1,12 @@
+[project]
+name = "veragents"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dotenv>=0.9.9",
+    "loguru>=0.7.3",
+    "openai>=2.15.0",
+    "requests>=2.31.0",
+]

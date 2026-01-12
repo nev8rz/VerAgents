@@ -1,10 +1,21 @@
-# Python-generated files
+# Byte-compiled / cache
 __pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+*.py[cod]
+*.pyo
 
-# Virtual environments
-.venv
+# Environments
+.env
+.venv/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Packaging / build
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
