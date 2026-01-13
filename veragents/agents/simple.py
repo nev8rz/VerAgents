@@ -14,6 +14,8 @@ from veragents.core.agent import Agent
 from veragents.core.config import Config
 from veragents.core.llm import VerAgentsLLM
 from veragents.core.messages import Message
+from veragents.core.prompts import build_tool_section, format_tool_descriptions
+from veragents.core.tool_utils import parse_tool_args
 from veragents.tools.registry import ToolRegistry, ToolError
 
 
@@ -146,42 +148,8 @@ class SimpleAgent(Agent):
         if not tools:
             return base
 
-        # Build detailed tool descriptions with parameters
-        tool_descriptions = []
-        for name in tools:
-            tool = self.tool_registry.get(name)
-            if tool:
-                desc = tool.description or ""
-                # Get parameter info from args_model
-                params_info = ""
-                if hasattr(tool, "args_model") and tool.args_model:
-                    schema = tool.args_model.model_json_schema()
-                    properties = schema.get("properties", {})
-                    required = schema.get("required", [])
-                    param_parts = []
-                    for param_name, param_schema in properties.items():
-                        param_type = param_schema.get("type", "any")
-                        default = ""
-                        if "default" in param_schema:
-                            default = f"={param_schema['default']}"
-                        optional = "" if param_name in required else "?"
-                        desc_hint = param_schema.get("description", "")
-                        param_parts.append(f"{param_name}{optional}:{param_type} {desc_hint}")
-                    if param_parts:
-                        params_info = " | ".join(param_parts)
-                tool_descriptions.append(f"- **{name}**\n  {desc}\n  参数: {params_info}")
-
-        tool_list_str = "\n".join(tool_descriptions)
-        instructions = (
-            f"\n\n可用工具:\n{tool_list_str}\n"
-            "当问题涉及外部/实时信息（如搜索、天气、计算等）时，必须调用工具，不要臆测。\n"
-            "调用格式: [TOOL:tool_name:params]\n"
-            "params 可为 JSON 格式。例如:\n"
-            "[TOOL:search_web:{\"query\":\"python\",\"num\":3}]\n"
-            "[TOOL:get_current_weather:{\"city\":\"北京\"}]\n"
-            "可连续调用多个工具，先写出工具标记，待结果返回再给最终回答。\n"
-        )
-        return base + instructions
+        tool_list_str = format_tool_descriptions(self.tool_registry)
+        return base + build_tool_section(tool_list_str)
 
     def _extract_tool_calls(self, text: str) -> list[dict]:
         pattern = r"\[TOOL:([^:]+):([^\]]+)\]"
@@ -201,38 +169,13 @@ class SimpleAgent(Agent):
         if not self.tool_registry:
             return f"{tool_name}: 未配置工具注册表"
         try:
-            args = self._parse_args(arg_text)
+            args = parse_tool_args(self.tool_registry, tool_name, arg_text)
             result = self.tool_registry.dispatch(tool_name, args, strict=False)
             return f"{tool_name} -> {result}"
         except ToolError as exc:
             return f"{tool_name} -> 调用失败: {exc}"
         except Exception as exc:  # noqa: BLE001
             return f"{tool_name} -> 未知错误: {exc}"
-
-    def _parse_args(self, arg_text: str) -> dict:
-        # Try JSON first
-        arg_text = arg_text.strip()
-        if arg_text.startswith("{") and arg_text.endswith("}"):
-            try:
-                parsed = json.loads(arg_text)
-                if isinstance(parsed, dict):
-                    return parsed
-            except json.JSONDecodeError:
-                pass
-
-        # key=value pairs separated by commas
-        if "=" in arg_text:
-            args: dict = {}
-            parts = [p for p in arg_text.split(",") if p.strip()]
-            for part in parts:
-                if "=" in part:
-                    key, val = part.split("=", 1)
-                    args[key.strip()] = val.strip()
-            if args:
-                return args
-
-        # Fallback: single positional mapped to "input"
-        return {"input": arg_text}
 
     def _commit_history(self, user_text: str, assistant_text: str) -> None:
         self.add_message(Message(role="user", content=user_text))
