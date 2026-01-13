@@ -7,29 +7,47 @@ Weather tool using the open-meteo API (no API key required).
 from __future__ import annotations
 
 import requests
-from pydantic import BaseModel, Field
+from loguru import logger as log
 
 from veragents.tools import ToolError, register_tool
 
 
-class WeatherParams(BaseModel):
-    city: str = Field(..., description="City name, e.g., 'Beijing' or 'San Francisco'")
-    country: str | None = Field(None, description="Optional country filter, e.g., 'CN' or 'US'")
-
-
-def _geocode_city(city: str, country: str | None = None) -> tuple[float, float, str]:
+def _geocode_city(city: str, country: str | None = None, language: str = "zh") -> tuple[float, float, str]:
     """Resolve city -> (lat, lon, resolved_name) using open-meteo geocoding."""
-    params = {"name": city, "count": 1}
-    if country:
-        params["country"] = country
-    resp = requests.get("https://geocoding-api.open-meteo.com/v1/search", params=params, timeout=10)
-    resp.raise_for_status()
-    data = resp.json()
-    results = data.get("results") or []
-    if not results:
-        raise ToolError("get_current_weather", f"City not found: {city} ({country or 'any country'})", "NotFoundError")
-    first = results[0]
-    return first["latitude"], first["longitude"], first.get("name", city)
+    attempts = []
+
+    def _query(name: str, lang: str):
+        params = {"name": name, "count": 1, "language": lang}
+        if country:
+            params["country"] = country
+        resp = requests.get("https://geocoding-api.open-meteo.com/v1/search", params=params, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("results") or []
+
+    queries = [(city, language)]
+    if any("\u4e00" <= ch <= "\u9fff" for ch in city):
+        # If Chinese, try with/without "市"
+        if not city.endswith("市"):
+            queries.append((f"{city}市", language))
+        else:
+            queries.append((city.rstrip("市"), language))
+    # English fallback
+    queries.append((city, "en"))
+
+    for name, lang in queries:
+        try:
+            results = _query(name, lang)
+        except requests.RequestException as exc:  # network error
+            log.warning("Geocoding request failed for {} lang {}: {}", name, lang, exc)
+            continue
+        attempts.append((name, lang, len(results)))
+        if results:
+            first = results[0]
+            return first["latitude"], first["longitude"], first.get("name", name)
+
+    log.error("Geocoding failed | city={} country={} attempts={}", city, country, attempts)
+    raise ToolError("get_current_weather", f"City not found: {city} ({country or 'any country'})", "NotFoundError")
 
 
 def _fetch_weather(lat: float, lon: float) -> dict:
@@ -49,9 +67,9 @@ def _fetch_weather(lat: float, lon: float) -> dict:
 
 
 @register_tool(name="get_current_weather")
-def get_current_weather(params: WeatherParams) -> dict:
+def get_current_weather(city: str, country: str | None = None) -> dict:
     """获取城市当前天气（基于 open-meteo，免密钥）。"""
-    lat, lon, resolved_name = _geocode_city(params.city, params.country)
+    lat, lon, resolved_name = _geocode_city(city, country)
     weather = _fetch_weather(lat, lon)
     return {
         "city": resolved_name,

@@ -56,8 +56,17 @@ res = registry.dispatch("get_current_weather", {"city": "Beijing"})
 print(res)
 ```
 
+Web 搜索（SerpAPI：`SERPAPI_API_KEY`，或 Tavily：`TVLY_API_KEY`/`TAVILY_API_KEY`）：
+```python
+import veragents.tools.builtin.search  # 触发注册
+from veragents.tools import registry
+
+res = registry.dispatch("search_web", {"query": "LLM tools", "num": 3})
+print(res)
+```
+
 ## 目录
 - `veragents/core`：LLM 客户端、Agent、配置
 - `veragents/tools`：工具基类、注册表、装饰器
-- `veragents/tools/builtin`：示例工具（天气）
+- `veragents/tools/builtin`：示例工具（天气、Web 搜索）
 - `examples/`：LLM 与工具使用示例

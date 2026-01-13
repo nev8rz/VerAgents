@@ -149,3 +149,4 @@ print(json.dumps(tools_schema, indent=2))
 
 ## 内置示例工具
 - 天气（open-meteo，无需密钥）：`veragents.tools.builtin.weather`（工具名：`get_current_weather`）
+- Web 搜索（SerpAPI：`SERPAPI_API_KEY`，或 Tavily：`TVLY_API_KEY`/`TAVILY_API_KEY`）：`veragents.tools.builtin.search`（工具名：`search_web`）
