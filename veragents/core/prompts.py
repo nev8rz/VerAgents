@@ -68,3 +68,72 @@ History:
 {history}
 
 请开始 Thought 和 Action："""
+
+# Planner / Executor prompts for PlanAndSolveAgent
+PLANNER_PROMPT_TEMPLATE = """你是一个顶级的AI规划专家。你的任务是将用户提出的复杂问题分解成多个按序排列的可执行子任务。
+
+问题: {question}
+
+请仅输出一个 Python 列表，每个元素为一个字符串子任务，格式示例:
+[\"步骤1\", \"步骤2\", \"步骤3\"]"""
+
+EXECUTOR_PROMPT_TEMPLATE = """你是一位 AI 执行专家，将严格按计划逐步完成任务。
+
+# 原始问题:
+{question}
+
+# 完整计划:
+{plan}
+
+# 历史步骤与结果:
+{history}
+
+# 当前步骤:
+{current_step}
+
+请只输出“当前步骤”的最终答案，不要额外解释。"""
+
+EXECUTOR_FINAL_PROMPT_TEMPLATE = """你是一位 AI 执行专家。基于已完成的所有步骤结果，给出最终答案。
+
+# 原始问题:
+{question}
+
+# 完整计划:
+{plan}
+
+# 已完成步骤与结果:
+{history}
+
+请整合以上信息输出最终答案：简洁、直接，不要重复逐条列出步骤标题。"""
+
+
+# Reflection Agent 默认模板
+REFLECTION_PROMPTS = {
+    "initial": """请根据以下要求完成任务：
+
+任务: {task}
+
+请提供一个完整、准确的回答。""",
+    "reflect": """请仔细审查以下回答，并找出可能的问题或改进空间：
+
+# 原始任务:
+{task}
+
+# 当前回答:
+{content}
+
+请分析这个回答的质量，指出不足之处，并提出具体的改进建议。
+如果回答已经很好，请回答"无需改进"。""",
+    "refine": """请根据反馈意见改进你的回答：
+
+# 原始任务:
+{task}
+
+# 上一轮回答:
+{last_attempt}
+
+# 反馈意见:
+{feedback}
+
+请提供一个改进后的回答。"""
+}
