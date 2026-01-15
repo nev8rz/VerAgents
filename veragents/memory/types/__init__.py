@@ -1,8 +1,20 @@
 """各类记忆实现。"""
 
 from .working import WorkingMemory
-from .episodic import EpisodicMemory
-from .semantic import SemanticMemory
-from .perceptual import PerceptualMemory
+from .episodic import Episode, EpisodicMemory
+from .semantic import Entity, Relation, SemanticMemory
+from .perceptual import Perception, PerceptualMemory
 
-__all__ = ["WorkingMemory", "EpisodicMemory", "SemanticMemory", "PerceptualMemory"]
+__all__ = [
+    "WorkingMemory",
+    "Episode",
+    "EpisodicMemory",
+    "Entity",
+    "Relation",
+    "SemanticMemory",
+    "Perception",
+    "PerceptualMemory",
+]
+
+
+

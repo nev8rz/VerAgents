@@ -106,6 +106,8 @@ class QdrantStore:
             ("memory_type", models.PayloadSchemaType.KEYWORD),
             ("user_id", models.PayloadSchemaType.KEYWORD),
             ("memory_id", models.PayloadSchemaType.KEYWORD),
+            ("modality", models.PayloadSchemaType.KEYWORD),
+            ("session_id", models.PayloadSchemaType.KEYWORD),
             ("timestamp", models.PayloadSchemaType.INTEGER),
         ]
         for field_name, schema_type in index_fields:
