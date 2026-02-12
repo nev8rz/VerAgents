@@ -109,6 +109,11 @@ class QdrantStore:
             ("modality", models.PayloadSchemaType.KEYWORD),
             ("session_id", models.PayloadSchemaType.KEYWORD),
             ("timestamp", models.PayloadSchemaType.INTEGER),
+            # RAG pipeline 使用的过滤字段
+            ("rag_namespace", models.PayloadSchemaType.KEYWORD),
+            ("is_rag_data", models.PayloadSchemaType.BOOL),
+            ("data_source", models.PayloadSchemaType.KEYWORD),
+            ("source", models.PayloadSchemaType.KEYWORD),
         ]
         for field_name, schema_type in index_fields:
             try:

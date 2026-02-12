@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
@@ -58,7 +59,7 @@ class MemoryManager:
             importance = self._calculate_importance(content, metadata)
 
         memory_item = MemoryItem(
-            id="",
+            id=str(uuid.uuid4()),
             content=content,
             memory_type=target_type,
             user_id=self.user_id,
